@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="de">
+<head><meta charset="utf-8"><title>Appilot-Check</title><link rel="stylesheet" href="popup.css"></head>
+<body>
+<header><img src="icons/32.png" alt="" width="20" height="20"><h1>Appilot-Check</h1></header>
+<p class="host" id="host">–</p>
+<label for="name">Name der Maske</label>
+<input id="name" type="text" autocomplete="off">
+<label class="row"><input id="unkenntlich" type="checkbox" checked> Bildausschnitte unkenntlich machen</label>
+<label class="row"><input id="kern" type="checkbox" checked> Kernmaske (zählt zur Gesamtampel)</label>
+<button id="pruefen" class="primary" type="button">Diese Maske prüfen</button>
+<p id="status" role="status" aria-live="polite"></p>
+<h2>Geprüfte Masken <span id="anzahl"></span></h2>
+<ul id="liste"></ul>
+<div class="actions">
+  <button id="report" type="button">Report öffnen</button>
+  <button id="leeren" type="button" class="ghost">Liste leeren</button>
+</div>
+<p class="hint">Misst die Eignung für Appilot, keine BITV-Konformität. Nur eigene oder freigegebene Anwendungen prüfen.</p>
+<script type="module" src="popup.js"></script>
+</body>
+</html>
