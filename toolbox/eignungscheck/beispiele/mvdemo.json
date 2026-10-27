@@ -1,0 +1,58 @@
+{
+ "name": "HKR-Demo (Nachbau Fiori, MVDemo)",
+ "baseUrl": "http://localhost:8801/",
+ "masks": [
+  {
+   "name": "Startseite",
+   "url": "index.html#/"
+  },
+  {
+   "name": "Verpflichtung – Schritt 1",
+   "url": "index.html#/verpflichtung/1"
+  },
+  {
+   "name": "Verpflichtung – Schritt 2",
+   "url": "index.html#/verpflichtung/2"
+  },
+  {
+   "name": "Verpflichtung – Schritt 3",
+   "url": "index.html#/verpflichtung/3"
+  },
+  {
+   "name": "Verpflichtung – Schritt 4",
+   "url": "index.html#/verpflichtung/4"
+  },
+  {
+   "name": "Verpflichtung – Schritt 5",
+   "url": "index.html#/verpflichtung/5"
+  },
+  {
+   "name": "Meine Verpflichtungen",
+   "url": "index.html#/liste"
+  },
+  {
+   "name": "Mittelverfügbarkeit",
+   "url": "index.html#/mittel"
+  },
+  {
+   "name": "Lernseite",
+   "url": "lernen.html",
+   "kern": false
+  },
+  {
+   "name": "Case-Editor (Autoren)",
+   "url": "editor.html",
+   "kern": false
+  },
+  {
+   "name": "Lern-Editor (Autoren)",
+   "url": "lern-editor.html",
+   "kern": false
+  },
+  {
+   "name": "Feedback-Postfach",
+   "url": "feedback.html",
+   "kern": false
+  }
+ ]
+}

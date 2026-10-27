@@ -1,0 +1,6 @@
+node_modules/
+report-*/
+testseiten/ui5/.ui5/
+testseiten/ui5/resources/
+*.log
+.DS_Store

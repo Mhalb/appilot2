@@ -1,0 +1,11 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><title>Gut beschriftete Maske</title></head>
+<body><main><h1>Antrag erfassen</h1>
+<form>
+  <label for="name">Name</label><input id="name" aria-describedby="name-hilfe"><p id="name-hilfe">Vor- und Nachname</p>
+  <label for="betrag">Betrag</label><input id="betrag" type="number">
+  <label for="art">Art</label><select id="art"><option>Bitte wählen</option><option>Dienstreise</option></select>
+  <label><input type="checkbox" id="eilig"> Eilig</label>
+</form>
+<div role="status" id="meldung"></div>
+<button type="button">Entwurf sichern</button><button type="button">Weiter</button>
+</main></body></html>

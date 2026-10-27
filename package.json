@@ -1,0 +1,15 @@
+{
+  "name": "appilot2",
+  "private": true,
+  "type": "module",
+  "description": "Appilot als eigene App: Kern, Profile, Server, Studio und Toolbox",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "eignungscheck": "node toolbox/eignungscheck/eignungscheck.mjs",
+    "testseite:ui5": "node testseiten/ui5/setup.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  },
+  "engines": { "node": ">=20" }
+}

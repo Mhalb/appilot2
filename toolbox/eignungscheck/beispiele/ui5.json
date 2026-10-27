@@ -1,0 +1,2 @@
+{ "name": "UI5-Testseite (OpenUI5, Fiori-Horizon)", "baseUrl": "http://localhost:8802/", "settleMs": 2500,
+  "masks": [ {"name": "Verpflichtung anlegen", "url": "index.html"} ] }

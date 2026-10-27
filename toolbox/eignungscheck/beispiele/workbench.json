@@ -1,0 +1,8 @@
+{ "name": "bk Workbench", "baseUrl": "http://localhost:8800/", "localStorage": {"bkz-user": "mike"},
+  "masks": [
+    {"name": "Zeit und Arbeitszeit", "url": "/"},
+    {"name": "Tickets", "url": "/tickets/"},
+    {"name": "Projekte", "url": "/projekte/"},
+    {"name": "Kunden", "url": "/kunden/"},
+    {"name": "AppPilot mobil", "url": "/mobil/", "kern": false}
+  ] }
