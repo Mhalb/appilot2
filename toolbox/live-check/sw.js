@@ -1,0 +1,93 @@
+// Appilot-Check · Service Worker
+// Hängt sich per chrome.debugger an den aktiven Tab, liest den Barrierefreiheitsbaum und misst die Maske
+// mit derselben Logik wie das Skript. Ergebnisse liegen in chrome.storage.local, je Herkunft (origin).
+import { itemsFromAX, measureMask, blindAreasInPage, pixelateDataUrl } from './lib/messung.js';
+
+const PROTOCOL = '1.3';
+const send = (target, method, params = {}) => chrome.debugger.sendCommand(target, method, params);
+const evalInPage = async (target, fn) => {
+  const r = await send(target, 'Runtime.evaluate', { expression: `(${fn.toString()})()`, returnByValue: true, awaitPromise: true });
+  return r.result ? r.result.value : undefined;
+};
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+export const storageKey = origin => 'live:' + origin;
+
+// CSP der Seite: HEAD-Anfrage an dieselbe Adresse, ändert nichts an der Anwendung
+function cspInPage() {
+  return fetch(location.href, { method: 'HEAD', credentials: 'include', cache: 'no-store' })
+    .then(r => r.headers.get('content-security-policy') || '').catch(() => '');
+}
+function scrollInPage() { return { x: scrollX, y: scrollY }; }
+
+async function check(tabId, opts = {}) {
+  const { unkenntlich = true, kern = true, wartezeit = 1500, maxShots = 8 } = opts;
+  const tab = await chrome.tabs.get(tabId);
+  if (!/^https?:/.test(tab.url || '')) throw new Error('Nur Webseiten (http/https) lassen sich prüfen.');
+  const target = { tabId };
+  await chrome.debugger.attach(target, PROTOCOL);
+  try {
+    await send(target, 'DOM.enable'); await send(target, 'Accessibility.enable'); await send(target, 'Page.enable');
+    await send(target, 'DOM.getDocument', { depth: -1, pierce: true });
+    const snap = async () => itemsFromAX((await send(target, 'Accessibility.getFullAXTree')).nodes);
+    const items = await snap();
+    const blind = await evalInPage(target, blindAreasInPage);
+    const csp = await evalInPage(target, cspInPage);
+    const domInfo = async backend => {
+      try {
+        const { node } = await send(target, 'DOM.describeNode', { backendNodeId: backend });
+        const a = node.attributes || []; let id = '';
+        for (let i = 0; i < a.length; i += 2) if (a[i] === 'id') id = a[i + 1];
+        return { tag: (node.localName || node.nodeName || '').toLowerCase(), id };
+      } catch { return { tag: '', id: '' }; }
+    };
+    const clip = async backend => {
+      try {
+        const { model } = await send(target, 'DOM.getBoxModel', { backendNodeId: backend });
+        const s = await evalInPage(target, scrollInPage);
+        const q = model.border; const xs = [q[0], q[2], q[4], q[6]], ys = [q[1], q[3], q[5], q[7]];
+        const x = Math.max(0, Math.min(...xs) - 6), y = Math.max(0, Math.min(...ys) - 6);
+        const w = Math.max(...xs) - x + 12, h = Math.max(...ys) - y + 12;
+        if (w < 4 || h < 4 || w > 1400 || h > 900) return null;
+        const shot = await send(target, 'Page.captureScreenshot',
+          { format: 'png', captureBeyondViewport: true, clip: { x: x + s.x, y: y + s.y, width: w, height: h, scale: 1 } });
+        const url = 'data:image/png;base64,' + shot.data;
+        return unkenntlich ? await pixelateDataUrl(url) : url;
+      } catch { return null; }
+    };
+    const name = (opts.name || tab.title || tab.url).trim();
+    const result = await measureMask({ items, domInfo, clip, maxShots, name, url: tab.url, kern, title: tab.title, blind, csp, secondItems: null });
+    // Stabilität ohne Neuladen: zweite Messung nach kurzer Wartezeit (die Seite des Nutzers bleibt, wie sie ist)
+    await sleep(wartezeit);
+    const second = await snap();
+    const stab = await measureMask({ items, domInfo: async () => ({}), secondItems: second, name, url: tab.url });
+    result.stabilitaet = stab.stabilitaet;
+    result.stabilitaetArt = `zweite Messung nach ${(wartezeit / 1000).toLocaleString('de-DE')} s, ohne Neuladen`;
+    result.unkenntlich = unkenntlich;
+    await save(new URL(tab.url).origin, result);
+    return result;
+  } finally {
+    await chrome.debugger.detach(target).catch(() => {});
+  }
+}
+
+async function save(origin, result) {
+  const key = storageKey(origin);
+  const cur = (await chrome.storage.local.get(key))[key] || { origin, masken: [] };
+  cur.masken = cur.masken.filter(m => !(m.url === result.url && m.name === result.name));
+  cur.masken.push(result);
+  await chrome.storage.local.set({ [key]: cur });
+}
+
+chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
+  if (msg?.type === 'check') {
+    check(msg.tabId, msg.opts).then(r => reply({ ok: true, result: r })).catch(e => reply({ ok: false, error: String(e.message || e) }));
+    return true;
+  }
+  if (msg?.type === 'clear') {
+    chrome.storage.local.remove(storageKey(msg.origin)).then(() => reply({ ok: true }));
+    return true;
+  }
+});
+
+// für automatische Tests
+self.appilotCheck = check;
