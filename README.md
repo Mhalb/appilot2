@@ -14,7 +14,7 @@ statt über eigene Markierungen oder generierte IDs. Dadurch reicht je Anwendung
 | Profile | Masken, Feldhilfen, Besonderheiten je Anwendung (Workbench, Nextcloud, Fiori) | offen |
 | Server | Abläufe, Wissen, Feedback, Werkzeugregister, Anbindung an das Model-Gateway | offen |
 | Studio | Aufnehmen, Bearbeiten, Lernstrecken, Freigabe | folgt aus MVDemo |
-| Toolbox | Eignungscheck mit Report, Live-Check im Browser, Probelauf-Runner, Datenabfluss-Prüfer | **Eignungscheck und Live-Check als Prototyp** |
+| Toolbox | Eignungscheck mit Report, Live-Check im Browser, Probelauf-Runner, Datenabfluss-Prüfer | **Eignungscheck, Live-Check und Fragetest als Prototyp** |
 
 Konzept: [docs/konzept.md](docs/konzept.md).
 
@@ -33,7 +33,7 @@ UI5-Testseite unter `localhost:8802` (`npm run testseite:ui5`, danach `python3 -
 ## Verzeichnisse
 
 ```
-toolbox/gemeinsam/       Messlogik und Report, gemeinsam für Skript und Erweiterung
+toolbox/gemeinsam/       Messlogik, Fragetest und Report, gemeinsam für Skript und Erweiterung
 toolbox/eignungscheck/   Eignungscheck als Skript (Doku, Beispielkonfigurationen)
 toolbox/live-check/      Appilot-Check als Chrome-Erweiterung (Installation siehe README dort)
 testseiten/ui5/          eigene Erfassungsmaske mit OpenUI5 im Fiori-Stil, als realistisches Prüfziel

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Appilot-Check",
-  "version": "0.1.0",
-  "description": "Prüft die geöffnete Seite wie ein Screenreader: Kann Appilot diese Anwendung zuverlässig verstehen?",
+  "version": "0.2.0",
+  "description": "Prüft die geöffnete Seite wie ein Screenreader und testet, ob Appilot Fragen dazu beantworten und führen kann.",
   "permissions": [
     "debugger",
     "storage",
@@ -28,5 +28,13 @@
     "32": "icons/32.png",
     "48": "icons/48.png",
     "128": "icons/128.png"
-  }
+  },
+  "host_permissions": [
+    "https://api.anthropic.com/*"
+  ],
+  "optional_host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ],
+  "options_page": "options.html"
 }

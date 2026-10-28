@@ -13,10 +13,12 @@ const { chromium } = require('playwright');
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ext = path.join(here, '..', 'toolbox', 'live-check');
 
-test('Kopie der Messlogik in der Erweiterung ist aktuell', () => {
-  const a = fs.readFileSync(path.join(here, '..', 'toolbox', 'gemeinsam', 'messung.js'), 'utf8');
-  const b = fs.readFileSync(path.join(ext, 'lib', 'messung.js'), 'utf8');
-  assert.equal(b, a, 'npm run sync:live-check ausführen');
+test('Kopien der gemeinsamen Logik in der Erweiterung sind aktuell', () => {
+  for (const f of ['messung.js', 'fragetest.js']) {
+    const a = fs.readFileSync(path.join(here, '..', 'toolbox', 'gemeinsam', f), 'utf8');
+    const b = fs.readFileSync(path.join(ext, 'lib', f), 'utf8');
+    assert.equal(b, a, `${f}: npm run sync:live-check ausführen`);
+  }
 });
 
 test('Live-Check misst Testmasken über chrome.debugger', async () => {

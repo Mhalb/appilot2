@@ -1,0 +1,24 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><title>Testseite Dateien</title>
+<style>[hidden]{display:none}</style></head>
+<body>
+<header><a href="#start">Startseite</a> <input type="search" aria-label="Suchen"> <button type="button" aria-label="Einstellungen">⚙</button></header>
+<main>
+<h1>Dateien</h1>
+<button type="button" id="neu" aria-haspopup="menu" aria-expanded="false">Neu</button>
+<div role="menu" id="menu" hidden>
+  <button role="menuitem" type="button" id="neuerOrdner">Neuer Ordner</button>
+  <button role="menuitem" type="button">Datei hochladen</button>
+</div>
+<div id="dialog" role="dialog" aria-label="Ordner anlegen" hidden>
+  <label for="oname">Ordnername</label><input id="oname"><button type="button">Anlegen</button>
+</div>
+<table>
+  <tr><td><a href="#a">Angebot Stadtwerke.pdf</a></td><td><button type="button">Aktionen</button></td></tr>
+  <tr><td><a href="#b">Vertrag Kanzlei.docx</a></td><td><button type="button">Aktionen</button></td></tr>
+</table>
+</main>
+<script>
+document.getElementById('neu').onclick = () => { const m = document.getElementById('menu'); m.hidden = !m.hidden; };
+document.getElementById('neuerOrdner').onclick = () => { document.getElementById('menu').hidden = true; document.getElementById('dialog').hidden = false; };
+</script>
+</body></html>
