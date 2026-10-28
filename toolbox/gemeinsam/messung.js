@@ -23,7 +23,7 @@ export function itemsFromAX(nodes) {
     let p = byId.get(n.parentId), hops = 0;
     while (p && hops++ < 12) {
       const r = v(p.role);
-      if (['row', 'listitem', 'treeitem', 'article'].includes(r)) return r + ':' + ((v(p.name) || '').trim() || p.nodeId);
+      if (['row', 'LayoutTableRow', 'listitem', 'treeitem', 'article'].includes(r)) return r + ':' + ((v(p.name) || '').trim() || p.nodeId);
       p = byId.get(p.parentId);
     }
     return '';
@@ -146,7 +146,7 @@ export function buildReport({ anwendung, baseUrl, masken, modus = 'Skript' }) {
       ? `Content-Security-Policy erlaubt Skripte nur eingeschränkt (${s.trim()}); Einbindung über Freigabe in der CSP, Browser-Erweiterung oder Reverse Proxy.`
       : `Content-Security-Policy blockiert fremde Skripte (${s.trim()}); Browser-Erweiterung oder Reverse Proxy nötig.`;
   }
-  const aufwand = { gruen: 'Standardprofil, grob 1–2 Tage je Anwendung', gelb: 'Profil mit Zusatzregeln für die markierten Masken, grob 3–5 Tage', rot: 'Erst Barrieren beheben lassen oder andere Integration prüfen' }[gesamt];
+  const aufwand = !masken.length ? 'Noch keine Maske im Quick-Check gemessen' : { gruen: 'Standardprofil, grob 1–2 Tage je Anwendung', gelb: 'Profil mit Zusatzregeln für die markierten Masken, grob 3–5 Tage', rot: 'Erst Barrieren beheben lassen oder andere Integration prüfen' }[gesamt];
   return { anwendung, modus, erstellt: new Date().toISOString(), baseUrl, gesamt, maskenUnterscheidbar: new Set(sig).size === sig.length,
     mittel: { benennung: avg('benennung'), eindeutigkeit: avg('eindeutigkeit'), stabilitaet: avg('stabilitaet'), feldhilfen: avg('feldhilfen') },
     integration, aufwand, masken };
@@ -154,7 +154,7 @@ export function buildReport({ anwendung, baseUrl, masken, modus = 'Skript' }) {
 
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-export function reportHtml(R) {
+export function reportHtml(R, extraHtml = '') {
   const label = { gruen: 'Grün', gelb: 'Gelb', rot: 'Rot' };
   const fmt = x => (x === null || x === undefined ? '–' : x.toLocaleString('de-DE') + ' %');
   const dot = a => `<span class="dot ${a}" aria-hidden="true"></span><span>${label[a]}</span>`;
@@ -196,6 +196,7 @@ code{font-size:12.5px}.note{background:var(--card);border-left:4px solid var(--g
 <p class="muted">Masken unterscheidbar über Adresse, Titel oder Überschrift: ${R.maskenUnterscheidbar ? 'ja' : 'nein'}.</p>
 <h2>Blinde Bereiche</h2><ul>${blind}</ul>
 <h2>Befunde je Maske</h2><div class="scroll">${probs || '<p>Keine Befunde.</p>'}</div>
+${extraHtml}
 <h2>So ist der Report zu lesen</h2>
 <ul><li><b>Benennung:</b> Anteil der Bedienelemente mit Rolle und Namen im Barrierefreiheitsbaum.</li>
 <li><b>Eindeutig (mit Zeile):</b> Anteil der benannten Elemente, die Appilot über Rolle, Name und die umgebende Tabellenzeile oder den Listeneintrag sicher unterscheiden kann; darunter der Wert ohne Zeilenkontext.</li><li><b>Technische Namen:</b> Anteil der Namen, die wie interne Bezeichner wirken (z. B. Symbolname „edit“). Appilot findet das Element, kann es aber nicht verständlich erklären.</li>

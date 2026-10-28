@@ -37,3 +37,27 @@ prüft Maske für Maske. Anmeldung, Zwei-Faktor und Intranet sind kein Problem, 
 
 `lib/messung.js` ist eine Kopie von `toolbox/gemeinsam/messung.js`. Nach Änderungen dort `npm run sync:live-check`;
 ein Test prüft, dass beide gleich sind. `npm test` lädt die Erweiterung in Chromium und prüft zwei Testmasken.
+
+## Fragetest
+
+Der Reiter **Fragetest** prüft, ob Appilot eine echte Frage zur Seite beantworten und führen kann, z. B. „Wie lege
+ich einen neuen Ordner an?“ in Nextcloud.
+
+1. Einmal unter **Einstellungen** (Link oben rechts im Popup) Adresse, Modell und API-Schlüssel eintragen. Standard ist
+   Anthropic (`https://api.anthropic.com/v1/`, Modell `claude-sonnet-5-5`). Jede OpenAI-kompatible Schnittstelle geht,
+   etwa ein lokales Modell über Ollama (`http://localhost:11434/v1/`) oder vLLM; Chrome fragt dann einmal nach der
+   Freigabe für diese Adresse.
+2. Frage aus dem Katalog wählen oder eigene eingeben, **Frage testen**.
+3. Das Modell schlägt Schritte vor. Jeder Schritt wird gegen die echte Seite geprüft: **gefunden**, **mehrdeutig**,
+   **erfunden** (Element gibt es nicht) oder **offen** (erscheint erst nach einem vorherigen Schritt). Gefundene
+   Elemente werden auf der Seite nummeriert markiert.
+4. Die Erweiterung klickt nichts. Den Schritt selbst ausführen und **Nächsten Schritt prüfen** wählen.
+5. **Gegenproben** sind Fragen, die auf der Seite nicht gehen („Wie buche ich hier meinen Urlaub?“). Bestanden ist eine
+   Gegenprobe, wenn das Modell das erkennt, statt sich Schritte auszudenken.
+
+Die Ergebnisse stehen im Report im Abschnitt „Fragetest“.
+
+**Was an das Sprachmodell geht:** die Frage und eine Liste der Bedienelemente mit Kennung, Rolle und Namen. Mit
+„Inhalte ausblenden“ (Standard) werden Namen von Einträgen in Listen und Tabellen sowie dateinamenähnliche Links durch
+„[Eintrag]“ ersetzt und der Seitentitel weggelassen. Keine Bildschirmfotos, keine Feldinhalte. Trotzdem nur mit
+Testkonto oder Beispieldaten verwenden. Der API-Schlüssel liegt nur lokal in diesem Browser.

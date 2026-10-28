@@ -1,12 +1,16 @@
 import { buildReport, reportHtml } from './lib/messung.js';
+import { fragenHtml } from './lib/fragetest.js';
 const origin = new URLSearchParams(location.search).get('origin');
 const key = 'live:' + origin;
-const data = (await chrome.storage.local.get(key))[key];
-if (!data?.masken?.length) {
+const all = await chrome.storage.local.get([key, 'fragen:' + origin]);
+const data = all[key] || { masken: [] };
+const fragen = all['fragen:' + origin] || [];
+if (!data.masken.length && !fragen.length) {
   document.body.textContent = 'Für ' + origin + ' sind noch keine Masken geprüft.';
 } else {
   const R = buildReport({ anwendung: new URL(origin).host, baseUrl: origin, masken: data.masken, modus: 'Live-Check' });
-  const html = reportHtml(R);
+  R.fragen = fragen;
+  const html = reportHtml(R, fragenHtml(fragen));
   // Report als eigenständiges Dokument darstellen; die Downloads enthalten genau dieses HTML und die Rohdaten
   const doc = new DOMParser().parseFromString(html, 'text/html');
   document.head.replaceWith(document.adoptNode(doc.head));

@@ -2,11 +2,13 @@
 // Hängt sich per chrome.debugger an den aktiven Tab, liest den Barrierefreiheitsbaum und misst die Maske
 // mit derselben Logik wie das Skript. Ergebnisse liegen in chrome.storage.local, je Herkunft (origin).
 import { itemsFromAX, measureMask, blindAreasInPage, pixelateDataUrl } from './lib/messung.js';
+import { compactElements, buildMessages, askModel, verifyPlan, verifyOpen, judge, overlayInPage, clearOverlayInPage } from './lib/fragetest.js';
 
 const PROTOCOL = '1.3';
 const send = (target, method, params = {}) => chrome.debugger.sendCommand(target, method, params);
-const evalInPage = async (target, fn) => {
-  const r = await send(target, 'Runtime.evaluate', { expression: `(${fn.toString()})()`, returnByValue: true, awaitPromise: true });
+const evalInPage = async (target, fn, arg) => {
+  const call = arg === undefined ? '()' : `(${JSON.stringify(arg)})`;
+  const r = await send(target, 'Runtime.evaluate', { expression: `(${fn.toString()})${call}`, returnByValue: true, awaitPromise: true });
   return r.result ? r.result.value : undefined;
 };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -78,7 +80,80 @@ async function save(origin, result) {
   await chrome.storage.local.set({ [key]: cur });
 }
 
+// ---------- Fragetest ----------
+export const DEFAULTS = { baseUrl: 'https://api.anthropic.com/v1/', model: 'claude-sonnet-5-5', apiKey: '', ausblenden: true };
+export const fragenKey = origin => 'fragen:' + origin;
+async function settings() { return { ...DEFAULTS, ...((await chrome.storage.local.get('einstellungen')).einstellungen || {}) }; }
+
+async function withPage(tabId, fn) {
+  const tab = await chrome.tabs.get(tabId);
+  if (!/^https?:/.test(tab.url || '')) throw new Error('Nur Webseiten (http/https) lassen sich prüfen.');
+  const target = { tabId };
+  await chrome.debugger.attach(target, PROTOCOL);
+  try {
+    await send(target, 'DOM.enable'); await send(target, 'Accessibility.enable');
+    await send(target, 'DOM.getDocument', { depth: -1, pierce: true });
+    const items = itemsFromAX((await send(target, 'Accessibility.getFullAXTree')).nodes);
+    return await fn({ tab, target, items });
+  } finally { await chrome.debugger.detach(target).catch(() => {}); }
+}
+
+async function markSteps(target, pruefung) {
+  const s = await evalInPage(target, scrollInPage);
+  const boxes = [];
+  for (const [i, p] of pruefung.entries()) {
+    if (!p.backend || !['gefunden', 'mehrdeutig'].includes(p.status)) continue;
+    try {
+      const { model } = await send(target, 'DOM.getBoxModel', { backendNodeId: p.backend });
+      const q = model.border; const xs = [q[0], q[2], q[4], q[6]], ys = [q[1], q[3], q[5], q[7]];
+      boxes.push({ x: Math.min(...xs) + s.x - 3, y: Math.min(...ys) + s.y - 3, w: Math.max(...xs) - Math.min(...xs) + 6,
+        h: Math.max(...ys) - Math.min(...ys) + 6, label: String(i + 1), ok: p.status === 'gefunden' });
+    } catch { /* Element nicht sichtbar */ }
+  }
+  return evalInPage(target, overlayInPage, boxes);
+}
+
+async function frage(tabId, { frage, gegenprobe = false }) {
+  const cfg = await settings();
+  if (!cfg.apiKey && /anthropic\.com/.test(cfg.baseUrl)) throw new Error('Bitte zuerst in den Einstellungen einen API-Schlüssel eintragen.');
+  return withPage(tabId, async ({ tab, target, items }) => {
+    const { elements, ausgeblendet } = compactElements(items, { ausblenden: cfg.ausblenden });
+    const messages = buildMessages(frage, elements, cfg.ausblenden ? '' : tab.title);
+    const { plan } = await askModel(cfg, messages);
+    const pruefung = verifyPlan(plan, elements);
+    await markSteps(target, pruefung);
+    const entry = { frage, gegenprobe, url: tab.url, maske: tab.title, modell: cfg.model, ausblenden: cfg.ausblenden,
+      gesendet: { elemente: elements.length, ausgeblendet }, plan, pruefung, urteil: judge(plan, pruefung, gegenprobe),
+      zeit: new Date().toISOString() };
+    const key = fragenKey(new URL(tab.url).origin);
+    const list = (await chrome.storage.local.get(key))[key] || [];
+    list.push(entry); await chrome.storage.local.set({ [key]: list });
+    return { ...entry, index: list.length - 1 };
+  });
+}
+
+async function weiter(tabId, { origin, index }) {
+  const key = fragenKey(origin);
+  const list = (await chrome.storage.local.get(key))[key] || [];
+  const entry = list[index]; if (!entry) throw new Error('Frage nicht gefunden');
+  const cfg = await settings();
+  return withPage(tabId, async ({ target, items }) => {
+    const { elements } = compactElements(items, { ausblenden: cfg.ausblenden });
+    entry.pruefung = verifyOpen(entry.plan, entry.pruefung, elements);
+    entry.urteil = judge(entry.plan, entry.pruefung, entry.gegenprobe);
+    await markSteps(target, entry.pruefung);
+    list[index] = entry; await chrome.storage.local.set({ [key]: list });
+    return { ...entry, index };
+  });
+}
+
 chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
+  const handle = p => { p.then(r => reply({ ok: true, result: r })).catch(e => reply({ ok: false, error: String(e.message || e) })); return true; };
+  if (msg?.type === 'frage') return handle(frage(msg.tabId, msg.opts));
+  if (msg?.type === 'weiter') return handle(weiter(msg.tabId, msg.opts));
+  if (msg?.type === 'overlay-aus') return handle(withPage(msg.tabId, ({ target }) => evalInPage(target, clearOverlayInPage)));
+  if (msg?.type === 'fragen-leeren') return handle(chrome.storage.local.remove(fragenKey(msg.origin)));
+
   if (msg?.type === 'check') {
     check(msg.tabId, msg.opts).then(r => reply({ ok: true, result: r })).catch(e => reply({ ok: false, error: String(e.message || e) }));
     return true;
@@ -91,3 +166,5 @@ chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
 
 // für automatische Tests
 self.appilotCheck = check;
+self.appilotFrage = frage;
+self.appilotWeiter = weiter;

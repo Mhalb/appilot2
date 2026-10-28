@@ -1,4 +1,6 @@
-// Kopiert die gemeinsame Messlogik in die Browser-Erweiterung (Erweiterungen dürfen nur eigene Dateien laden).
+// Kopiert die gemeinsame Mess- und Fragetest-Logik in die Browser-Erweiterung (Erweiterungen dürfen nur eigene Dateien laden).
 import fs from 'node:fs';
-fs.copyFileSync('toolbox/gemeinsam/messung.js', 'toolbox/live-check/lib/messung.js');
-console.log('toolbox/live-check/lib/messung.js aktualisiert');
+for (const f of ['messung.js', 'fragetest.js']) {
+  fs.copyFileSync(`toolbox/gemeinsam/${f}`, `toolbox/live-check/lib/${f}`);
+  console.log(`toolbox/live-check/lib/${f} aktualisiert`);
+}

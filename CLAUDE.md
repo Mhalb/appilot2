@@ -5,7 +5,8 @@ Appilot als eigene App (Kern, Profile, Server, Studio, Toolbox). Konzept: `docs/
 ## Regeln
 
 - Änderungen per Pull Request auf `main`, eigener Branch. Commit-Nachrichten, PR-Texte, Doku und Oberfläche auf Deutsch; Code-Bezeichner Englisch.
-- Messlogik nur in `toolbox/gemeinsam/messung.js` ändern, danach `npm run sync:live-check` (Kopie für die Erweiterung).
+- Mess- und Fragetest-Logik nur in `toolbox/gemeinsam/` ändern (`messung.js`, `fragetest.js`), danach `npm run sync:live-check` (Kopie für die Erweiterung).
+- Fragetest: an das Sprachmodell nur Rolle und Name der Bedienelemente; Inhalte in Listen standardmäßig ausblenden. Tests laufen gegen ein nachgebautes Modell, nie gegen eine echte API.
 - `npm test` muss grün sein. Neue Messgrößen oder Befunde im Eignungscheck brauchen einen Test mit einer Testmaske in `tests/fixtures/`.
 - Die MVDemo (eigenes Repository) wird nicht verändert; Teile daraus werden hierher übernommen.
 - **Keine Kundendaten, keine DVZ- oder Konzeptinhalte von Kundenvorhaben** im Repository, in Testseiten oder Beispielreports. Testseiten sind selbst gebaut und als Testseite gekennzeichnet.
@@ -27,4 +28,4 @@ Appilot als eigene App (Kern, Profile, Server, Studio, Toolbox). Konzept: `docs/
 5. Datenabfluss-Prüfer.
 
 Offen im Eignungscheck: Anmeldung, automatisches Abklicken der Masken (Erkunden-Modus), Versionsvergleich über ein Update.
-Offen im Live-Check: Seitenleiste statt Popup, Maske per Tastenkürzel prüfen, Veröffentlichung im Chrome Web Store.
+Offen im Live-Check: Fragetest gegen echtes Modell erproben und jede Frage mehrfach stellen, Seitenleiste statt Popup, Maske per Tastenkürzel prüfen, Veröffentlichung im Chrome Web Store.
